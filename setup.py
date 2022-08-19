@@ -44,28 +44,27 @@ with open('./README.md') as readme:
 
 
 setup(
-    name='cfx-typing',
+    name='cfx-utils',
     # *IMPORTANT*: Don't manually change the version here. Use `make bump`, as described in readme
     version='1.0.0-beta.1',
-    description="""cfx-typing: Common type annotations for conflux python packages""",
+    description="""cfx-utils: Common utils for conflux python packages""",
     long_description=long_description,
     long_description_content_type='text/markdown',
     author='Conflux-Dev',
     author_email='wenda.zhang@confluxnetwork.org',
-    url='https://github.com/conflux-fans/cfx-typing',
+    url='https://github.com/conflux-fans/cfx-utils',
     include_package_data=True,
     python_requires='>=3.8, <3.11',
     install_requires=[
-        "web3>=6.0.0b4",
         "cfx-address>=1.0.0b1",
     ],
     extras_require=extras_require,
-    py_modules=['cfx_typing'],
+    py_modules=['cfx_utils'],
     license="MIT",
     zip_safe=False,
     keywords='conflux',
     packages=find_packages(exclude=["tests", "tests.*"]),
-    package_data={'cfx_typing': ['py.typed']},
+    # package_data={'cfx_typing': ['py.typed']},
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Education",
