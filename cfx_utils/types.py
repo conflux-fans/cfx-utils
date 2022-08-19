@@ -1,3 +1,4 @@
+import sys
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -68,8 +69,11 @@ TxDict = TypedDict(
     total=False,
 )
 
-TxParam = Union[TxDict, dict[str, Any]]
-
+if sys.version_info >= (3,9):
+    TxParam = Union[TxDict, dict[str, Any]]
+else:
+    TxParam = Union[TxDict, dict]
+    
 __all__ = [
     "HexAddress",
     "ChecksumAddress",
