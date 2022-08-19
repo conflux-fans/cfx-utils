@@ -7,27 +7,28 @@ from setuptools import (
 
 extras_require = {
     'test': [
-        "pytest>=6.2.5,<7",
-        "pytest-xdist",
-        "tox>=2.9.1,<3",
+        # "pytest>=6.2.5,<7",
+        # "pytest-xdist",
+        # "tox>=2.9.1,<3",
     ],
     'lint': [
-        "flake8==3.8.3",
-        "isort>=4.2.15,<5",
-        "mypy==0.782",
-        "pydocstyle>=3.0.0,<4",
+        # "flake8==3.8.3",
+        # "isort>=4.2.15,<5",
+        # "mypy==0.782",
+        # "pydocstyle>=3.0.0,<4",
     ],
     'doc': [
-        "sphinx>=4.2.0,<5",
-        "sphinx_rtd_theme>=0.1.9",
-        "towncrier>=21,<22",
+        # "sphinx>=4.2.0,<5",
+        # "sphinx_rtd_theme>=0.1.9",
+        # "towncrier>=21,<22",
     ],
     'dev': [
         "bumpversion>=0.5.3,<1",
-        "pytest-watch>=4.1.0,<5",
+        # "pytest-watch>=4.1.0,<5",
         "wheel",
         "twine",
         "ipython",
+        "cfx-address>=1.0.0b4",
     ],
 }
 
@@ -56,7 +57,7 @@ setup(
     include_package_data=True,
     python_requires='>=3.8, <3.11',
     install_requires=[
-        "cfx-address>=1.0.0b1",
+        # "cfx-address>=1.0.0b1",
     ],
     extras_require=extras_require,
     py_modules=['cfx_utils'],
