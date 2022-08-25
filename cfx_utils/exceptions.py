@@ -18,3 +18,6 @@ class InvalidConfluxHexAddress(InvalidHexAddress):
     The supplied hex address starts without 0x0, 0x1 or 0x8, which is required by conflux
     """
     pass
+
+class InvalidEpochNumebrParam(ValueError):
+    pass
