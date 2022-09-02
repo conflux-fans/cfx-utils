@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from cfx_address import Base32Address
 
 ### copy-paste definition from web3 
-_Hash32 = Union[Hash32, HexBytes, HexStr]
+_Hash32 = Union[Hash32, bytes, HexStr, str]
 Nonce = NewType("Nonce", int)
 # copy-paste ended
 
@@ -73,19 +73,20 @@ if sys.version_info >= (3,9):
     TxParam = Union[TxDict, dict[str, Any]]
 else:
     TxParam = Union[TxDict, dict]
+
+# __all__ = [
+#     "HexAddress",
+#     "ChecksumAddress",
+#     "Storage",
+#     "Drip",
+#     "Nonce",
+#     "Hash32"
+#     "_Hash32",
+#     "EpochLiteral",
     
-__all__ = [
-    "HexAddress",
-    "ChecksumAddress",
-    "Storage",
-    "Drip",
-    "Nonce",
-    "_Hash32",
-    "EpochLiteral",
-    
-    "AddressParam",
-    "EpochNumberParam",
-    "BlockNumber",
-    "TxDict",
-    "TxParam",
-]
+#     "AddressParam",
+#     "EpochNumberParam",
+#     "BlockNumber",
+#     "TxDict",
+#     "TxParam",
+# ]
