@@ -6,3 +6,7 @@ build: clean
 
 publish: 
 	twine upload dist/* --repository cfx-utils
+
+test:
+	pytest tests
+	pytest separate_tests

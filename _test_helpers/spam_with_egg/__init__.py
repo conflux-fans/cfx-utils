@@ -1,4 +1,4 @@
-from tests._test_helpers.spam import Spam
+from _test_helpers.spam import Spam
 class SpamWithEgg(Spam):
     def __init__(self, x):
         Spam.__init__(self, x)
