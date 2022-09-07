@@ -10,6 +10,7 @@ extras_require = {
         # "pytest>=6.2.5,<7",
         # "pytest-xdist",
         # "tox>=2.9.1,<3",
+        "cfx-address"
     ],
     'lint': [
         # "flake8==3.8.3",
@@ -58,7 +59,9 @@ setup(
     python_requires='>=3.8, <3.11',
     install_requires=[
         # "cfx-address>=1.0.0b1",
-        "typing_extensions"
+        "typing_extensions",
+        "hexbytes",
+        "eth-typing",
     ],
     extras_require=extras_require,
     py_modules=['cfx_utils'],
