@@ -8,7 +8,7 @@ from typing import (
     Any, List
 )
 
-_post_import_hooks: dict[Any, List] = defaultdict(list)
+_post_import_hooks = defaultdict(list)
 
 def execute_module_and_post(exec, posts):
     @functools.wraps(exec)
