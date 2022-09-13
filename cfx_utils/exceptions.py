@@ -21,3 +21,15 @@ class InvalidConfluxHexAddress(InvalidHexAddress):
 
 class InvalidEpochNumebrParam(ValueError):
     pass
+
+class AddressNotMatch(ValueError):
+    pass
+
+class HexAddressNotMatch(AddressNotMatch):
+    pass
+
+class Base32AddressNotMatch(AddressNotMatch):
+    """
+    the supplied Base32Address does not satisfy some specific requirements, e.g. network id or address type
+    """
+    pass
