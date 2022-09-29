@@ -33,3 +33,30 @@ class Base32AddressNotMatch(AddressNotMatch):
     the supplied Base32Address does not satisfy some specific requirements, e.g. network id or address type
     """
     pass
+
+class TokenError(ValueError):
+    pass
+
+class InvalidTokenValueType(TokenError):
+    pass
+
+class MismatchTokenUnit(TokenError):
+    pass
+
+class TokenUnitNotFound(TokenError):
+    pass
+
+class InvalidTokenValuePrecision(TokenError):
+    """
+    problem 
+    """
+    pass
+
+class InvalidTokenOperation(TokenError):
+    pass
+
+class FloatWarning(UserWarning):
+    pass
+
+class NegativeTokenValueWarning(UserWarning):
+    pass

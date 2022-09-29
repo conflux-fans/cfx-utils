@@ -4,3 +4,5 @@ cfx_utils.egg-info/
 **/__pycache__/
 dist/
 .vscode/
+note.ipynb
+.hypothesis/
