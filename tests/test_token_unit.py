@@ -104,7 +104,7 @@ def test_add_different_unit():
     assert_type_and_value(tmp, Drip, 10**9 + 10**18)
     
     with pytest.raises(InvalidTokenOperation):
-        m =  Wei(1) + CFX(1)
+        m =  Wei(1) + CFX(1) # type: ignore
 
 def test_equal():
     assert Drip(1) == CFX(1 / decimal.Decimal(10**18))
@@ -121,7 +121,7 @@ def test_mul():
     assert "due to unexpected precision" in str(e)
     
     with pytest.raises(InvalidTokenOperation):
-        tmp = CFX(2) * Drip(3)
+        tmp = CFX(2) * Drip(3) # type: ignore
 
 def test_div():
     assert_type_and_value(CFX(1) / Drip(1), decimal.Decimal, 10**18)
@@ -169,3 +169,14 @@ def test_compare():
     # Drip(10) > 5 and 5 > CFX(2)
     # However, 5 has different meanings in different context, Users should be careful to use chained comparison on token values
     assert Drip(10) > 5 > CFX(2)
+
+def test_value():
+    assert_type_and_value(CFX(2).value, decimal.Decimal, 2)
+    assert_type_and_value(Drip(2).value, int, 2)
+    tmp = Drip(2)
+    tmp.value = 3
+    assert_type_and_value(tmp, Drip, 3)
+    with pytest.warns(FloatWarning):
+        tmp.value = 3.0
+    with pytest.raises(InvalidTokenValueType):
+        tmp.value = 0.5

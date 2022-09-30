@@ -31,8 +31,9 @@ from cfx_utils.exceptions import (
 
 AnyTokenUnit = TypeVar("AnyTokenUnit", bound="AbstractTokenUnit")
 BaseTokenUnit = TypeVar("BaseTokenUnit", bound="AbstractBaseTokenUnit")
-# NumberType = TypeVar("NumberType", int, decimal.Decimal)
+T = TypeVar("T")
 
+# wraps exceptions took place when doing token operations
 def token_operation_error(func):
     def wrapper(*args, **kwargs):
         try:
@@ -46,12 +47,15 @@ def token_operation_error(func):
                 raise InvalidTokenOperation(MismatchTokenUnit)
     return wrapper
 
+# a decorator to warn float argument usage such as
+# cls.classmethod(float_value)
+# self.method(float_value)
 def warn_float_value(func):
     def wrapper(*args, **kwargs):
         assert len(args) == 2
-        cls = args[0]
-        cast(Type[AbstractTokenUnit], cls)
-        cls._warn_float_value(args[1])
+        cls_or_self = args[0]
+        cast(Type[AbstractTokenUnit], cls_or_self)
+        cls_or_self._warn_float_value(args[1])
         return func(*args, **kwargs)
     return wrapper
 
@@ -70,8 +74,17 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         elif isinstance(value, float):
             raise Exception("unreachable")
         else:
-            self._value = value 
+            self._value = value
     
+    @property
+    def value(self):
+        return self._value
+    
+    @value.setter
+    @abc.abstractmethod
+    def value(self, value):
+        self._value = value
+
     @overload
     def to(self, target_unit: str) -> "AbstractTokenUnit[BaseTokenUnit]":
         ...
@@ -111,7 +124,7 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
     def to_base_unit(self) -> BaseTokenUnit:
         return self.to(self.base_unit)
     
-    @classmethod
+    @combomethod
     def _check_value(cls, value):
         return decimal.Decimal(value) * (10**cls.decimals) % 1 == 0
     
@@ -286,13 +299,20 @@ class AbstractDerivedTokenUnit(AbstractTokenUnit[BaseTokenUnit], abc.ABC):
     _value: decimal.Decimal
     
     def __init__(self, value: Union[int, decimal.Decimal, str, float, AbstractTokenUnit[BaseTokenUnit]]):
-        
-        cls = self.__class__
         if isinstance(value, AbstractTokenUnit):
             super().__init__(value)
             return
-        # float is support but will always warn
-        self.__class__._warn_float_value(value)
+        
+        self.value = value
+
+    @property
+    def value(self) -> decimal.Decimal:
+        return self._value
+
+    @value.setter
+    @warn_float_value
+    def value(self, value: Union[int, decimal.Decimal, str, float]):
+        cls = self.__class__
         try:
             value = decimal.Decimal(value)
         except:
@@ -300,13 +320,13 @@ class AbstractDerivedTokenUnit(AbstractTokenUnit[BaseTokenUnit], abc.ABC):
                                         f"{int} or {decimal.Decimal} typed value is recommended")
         
         # Token Value is of great importance, so we always check value validity
-        if not cls._check_value(value):
+        if not self._check_value(value):
             raise InvalidTokenValuePrecision(f"Not able to initialize {cls} with {type(value)} {value} due to unexpected precision. "
                                   f"Try represent {value} in {decimal.Decimal} properly, or init token value in int from {cls.base_unit}")
-        self.__class__._warn_negative_token_value(value)
+        self._warn_negative_token_value(value)
         self._value = value
 
-    
+
 class AbstractBaseTokenUnit(AbstractTokenUnit, abc.ABC):
     derived_units: Dict[str, Type["AbstractTokenUnit"]] = {}
     decimals: int = 0
@@ -326,14 +346,22 @@ class AbstractBaseTokenUnit(AbstractTokenUnit, abc.ABC):
         if isinstance(value, AbstractTokenUnit):
             super().__init__(value)
             return
-        cls._warn_float_value(value)
         if isinstance(value, str):
             value = int(value, base)
+        self.value = value
+
+    @property
+    def value(self) -> int:
+        return self._value
+
+    @value.setter
+    @warn_float_value
+    def value(self, value):
         if value % 1 != 0:
-            raise InvalidTokenValueType(f"An integer is expected to init {cls.__name__}, "
+            raise InvalidTokenValueType(f"An integer is expected to init {self.__class__}, "
                              f"received type {type(value)} argument: {value}")
         value = int(value)
-        cls._warn_negative_token_value(value)
+        self._warn_negative_token_value(value)
         self._value = value
 
     
@@ -385,3 +413,17 @@ class GDrip(AbstractDerivedTokenUnit[Drip]):
     decimals: int = 9
     base_unit = Drip
 Drip.register_derived_units(GDrip)
+
+@overload
+def to_int_if_drip_units(value: AbstractTokenUnit) -> int:
+    ...
+
+@overload
+def to_int_if_drip_units(value: T) -> T:
+    ...
+
+def to_int_if_drip_units(value: Union[AbstractTokenUnit, T]) -> Union[int, T]:
+    if isinstance(value, AbstractTokenUnit):
+        # MismatchTokenUnit might arise
+        return value.to(Drip).value
+    return value

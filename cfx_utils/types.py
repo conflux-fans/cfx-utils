@@ -1,7 +1,7 @@
-import sys
 from typing import (
     TYPE_CHECKING,
     Any,
+    Dict,
     NewType,
     TypedDict,
     Union,
@@ -25,7 +25,10 @@ from eth_typing.encoding import (
 #     Nonce,
 #     _Hash32,
 # )
-from decimal import Decimal
+from cfx_utils.token_unit import (
+    CFX, Drip, GDrip, AbstractDerivedTokenUnit
+)
+
 
 if TYPE_CHECKING:
     # avoid recursive import
@@ -36,8 +39,6 @@ _Hash32 = Union[Hash32, bytes, HexStr, str]
 Nonce = NewType("Nonce", int)
 # copy-paste ended
 
-Drip = NewType("Drip", int)
-CFX = NewType("CFX", Decimal)
 Storage = NewType("Storage", int)
 
 AddressParam = Union["Base32Address", str]
@@ -59,34 +60,15 @@ TxDict = TypedDict(
         # addr or ens
         "from": AddressParam,
         "gas": int,
-        "gasPrice": Drip,
+        "gasPrice": Union[Drip, AbstractDerivedTokenUnit[Drip], int],
         "nonce": Nonce,
         "to": AddressParam,
-        "value": Drip,
+        "value": Union[Drip, AbstractDerivedTokenUnit[Drip], int],
         "epochHeight": int,
         "storageLimit": Storage
     },
     total=False,
 )
 
-if sys.version_info >= (3,9):
-    TxParam = Union[TxDict, dict[str, Any]]
-else:
-    TxParam = Union[TxDict, dict]
+TxParam = Union[TxDict, Dict[str, Any]]
 
-# __all__ = [
-#     "HexAddress",
-#     "ChecksumAddress",
-#     "Storage",
-#     "Drip",
-#     "Nonce",
-#     "Hash32"
-#     "_Hash32",
-#     "EpochLiteral",
-    
-#     "AddressParam",
-#     "EpochNumberParam",
-#     "BlockNumber",
-#     "TxDict",
-#     "TxParam",
-# ]
