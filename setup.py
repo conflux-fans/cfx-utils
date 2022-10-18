@@ -15,7 +15,7 @@ extras_require = {
     'lint': [
         # "flake8==3.8.3",
         # "isort>=4.2.15,<5",
-        # "mypy==0.782",
+        "mypy",
         # "pydocstyle>=3.0.0,<4",
     ],
     'doc': [
@@ -69,7 +69,7 @@ setup(
     zip_safe=False,
     keywords='conflux',
     packages=find_packages(exclude=["tests", "tests.*"]),
-    # package_data={'cfx_typing': ['py.typed']},
+    package_data={'cfx_utils': ['py.typed']},
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Education",
