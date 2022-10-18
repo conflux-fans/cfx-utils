@@ -21,7 +21,7 @@ from cfx_utils.exceptions import (
 
 Wei = TokenUnitFactory.factory_base_unit("Wei")
 
-def assert_type_and_value(instance: object, typ: Type[Any], val: Union[int, decimal.Decimal, float, AbstractTokenUnit]):
+def assert_type_and_value(instance: object, typ: Type[Any], val: Union[int, decimal.Decimal, float, AbstractTokenUnit[Drip]]) -> None:
     assert type(instance) == typ
     assert instance == val
     assert val == instance

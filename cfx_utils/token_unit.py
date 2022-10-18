@@ -12,7 +12,7 @@ from typing import (
 
 import decimal
 import numbers
-from typing_extensions import (
+from typing_extensions import ( # type: ignore
     Self
 )
 import warnings
@@ -81,7 +81,6 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         return self._value
     
     @value.setter
-    @abc.abstractmethod
     def value(self, value):
         self._value = value
 
@@ -187,11 +186,11 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         ...
         
     @overload
-    def __add__(self, other: "AbstractTokenUnit[BaseTokenUnit]") -> BaseTokenUnit:
+    def __add__(self, other: "AbstractTokenUnit[BaseTokenUnit]") -> BaseTokenUnit: # type: ignore
         ...
     
     @overload
-    def __add__(self, other: Union[int, decimal.Decimal, float]) -> Self:
+    def __add__(self, other: Union[int, decimal.Decimal, float]) -> Self: # type: ignore
         ...
 
     @warn_float_value
@@ -226,11 +225,11 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         ...
         
     @overload
-    def __sub__(self, other: "AbstractTokenUnit[BaseTokenUnit]") -> BaseTokenUnit:
+    def __sub__(self, other: "AbstractTokenUnit[BaseTokenUnit]") -> BaseTokenUnit: # type: ignore
         ...
     
     @overload
-    def __sub__(self, other: Union[int, decimal.Decimal, float]) -> Self:
+    def __sub__(self, other: Union[int, decimal.Decimal, float]) -> Self: # type: ignore
         ...
 
     @warn_float_value
@@ -302,16 +301,16 @@ class AbstractDerivedTokenUnit(AbstractTokenUnit[BaseTokenUnit], abc.ABC):
         if isinstance(value, AbstractTokenUnit):
             super().__init__(value)
             return
-        
-        self.value = value
+
+        self.value = value # type: ignore
 
     @property
     def value(self) -> decimal.Decimal:
         return self._value
 
     @value.setter
-    @warn_float_value
-    def value(self, value: Union[int, decimal.Decimal, str, float]):
+    def value(self, value: Union[int, decimal.Decimal, str, float]) -> None:
+        self._warn_float_value(value)
         cls = self.__class__
         try:
             value = decimal.Decimal(value)
@@ -327,11 +326,25 @@ class AbstractDerivedTokenUnit(AbstractTokenUnit[BaseTokenUnit], abc.ABC):
         self._value = value
 
 
-class AbstractBaseTokenUnit(AbstractTokenUnit, abc.ABC):
-    derived_units: Dict[str, Type["AbstractTokenUnit"]] = {}
+class AbstractBaseTokenUnit(AbstractTokenUnit[Self], abc.ABC):
+    derived_units: Dict[str, Type["AbstractTokenUnit[Self]"]] = {}
     decimals: int = 0
     base_unit: Type[Self]
     _value: int
+
+    @property
+    def value(self) -> int:
+        return self._value
+
+    @value.setter
+    def value(self, value: Union[int, decimal.Decimal, float]) -> None:
+        self._warn_float_value(value)
+        if value % 1 != 0:
+            raise InvalidTokenValueType(f"An integer is expected to init {self.__class__}, "
+                             f"received type {type(value)} argument: {value}")
+        value = int(value)
+        self._warn_negative_token_value(value)
+        self._value = value
 
     @overload
     def __init__(self, value: str, base: int=10):
@@ -348,25 +361,10 @@ class AbstractBaseTokenUnit(AbstractTokenUnit, abc.ABC):
             return
         if isinstance(value, str):
             value = int(value, base)
-        self.value = value
-
-    @property
-    def value(self) -> int:
-        return self._value
-
-    @value.setter
-    @warn_float_value
-    def value(self, value):
-        if value % 1 != 0:
-            raise InvalidTokenValueType(f"An integer is expected to init {self.__class__}, "
-                             f"received type {type(value)} argument: {value}")
-        value = int(value)
-        self._warn_negative_token_value(value)
-        self._value = value
-
+        self.value = value # type: ignore
     
     @classmethod
-    def register_derived_units(cls, derived_unit: Type["AbstractDerivedTokenUnit"]):
+    def register_derived_units(cls, derived_unit: Type["AbstractDerivedTokenUnit"]) -> None:
         cls.derived_units[derived_unit.__name__] = derived_unit
 
 # This class is unused because type hint is not friendly if registered by factory
@@ -374,7 +372,7 @@ class AbstractBaseTokenUnit(AbstractTokenUnit, abc.ABC):
 # CFX = TokenUnitFactory.factory_derived_unit("CFX", 18, Drip)
 class TokenUnitFactory:
     @classmethod
-    def factory_derived_unit(cls, unit_name: str, decimals: int, base_unit: Type["AbstractBaseTokenUnit"]):
+    def factory_derived_unit(cls, unit_name: str, decimals: int, base_unit: Type[BaseTokenUnit]) -> Type["AbstractDerivedTokenUnit[BaseTokenUnit]"]:
         DerivedUnit = type(
             unit_name, 
             (AbstractDerivedTokenUnit,), 
@@ -387,12 +385,12 @@ class TokenUnitFactory:
         return DerivedUnit
     
     @classmethod
-    def factory_base_unit(cls, unit_name: str):
-        BaseUnit = type(
+    def factory_base_unit(cls, unit_name: str) -> Type["AbstractBaseTokenUnit"]:
+        BaseUnit = cast(Type[AbstractBaseTokenUnit], type(
             unit_name,
             (AbstractBaseTokenUnit,),
             {},
-        )
+        ))
         BaseUnit.derived_units[unit_name] = BaseUnit
         BaseUnit.base_unit = BaseUnit
         return BaseUnit
@@ -415,7 +413,7 @@ class GDrip(AbstractDerivedTokenUnit[Drip]):
 Drip.register_derived_units(GDrip)
 
 @overload
-def to_int_if_drip_units(value: AbstractTokenUnit) -> int:
+def to_int_if_drip_units(value: AbstractTokenUnit) -> int: # type: ignore
     ...
 
 @overload
