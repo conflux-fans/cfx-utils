@@ -15,7 +15,7 @@ extras_require = {
     'lint': [
         # "flake8==3.8.3",
         # "isort>=4.2.15,<5",
-        "mypy",
+        # "mypy"  # we use pylance to check type because there is bug to use mypy Self
         # "pydocstyle>=3.0.0,<4",
     ],
     'doc': [
