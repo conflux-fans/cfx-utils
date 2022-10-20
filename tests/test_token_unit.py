@@ -1,5 +1,4 @@
 import decimal
-import numbers
 from typing import (
     Any,
     Type,
@@ -13,7 +12,7 @@ from cfx_utils.exceptions import (
     InvalidTokenOperation,
     InvalidTokenValueType,
     InvalidTokenValuePrecision,
-    MismatchTokenUnit,
+    TokenUnitNotMatch,
     FloatWarning,
     NegativeTokenValueWarning,
     TokenUnitNotFound
@@ -61,7 +60,7 @@ def test_to():
     with pytest.raises(TokenUnitNotFound):
         CFX(3).to("ETH")
         
-    with pytest.raises(MismatchTokenUnit):
+    with pytest.raises(TokenUnitNotMatch):
         CFX(3).to(Wei)
         
 def test_add_float():

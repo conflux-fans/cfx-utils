@@ -23,7 +23,7 @@ from cfx_utils.exceptions import (
     InvalidTokenValueType,
     InvalidTokenValuePrecision,
     InvalidTokenOperation,
-    MismatchTokenUnit,
+    TokenUnitNotMatch,
     FloatWarning,
     NegativeTokenValueWarning,
     TokenUnitNotFound,
@@ -43,7 +43,7 @@ def token_operation_error(func: Callable[P, T]) -> Callable[P, T]:
         except (
             InvalidTokenValueType,
             InvalidTokenValuePrecision,
-            MismatchTokenUnit,
+            TokenUnitNotMatch,
         ) as e:
             if isinstance(e, InvalidTokenValueType):
                 raise InvalidTokenOperation(
@@ -53,8 +53,8 @@ def token_operation_error(func: Callable[P, T]) -> Callable[P, T]:
                 raise InvalidTokenOperation(
                     f"Not able to execute operation {func.__name__} on {args} due to unexpected precision"
                 )
-            else:  # isinstance(e, MismatchTokenUnit):
-                raise InvalidTokenOperation(MismatchTokenUnit)
+            else:  # isinstance(e, TokenUnitNotMatch):
+                raise InvalidTokenOperation(TokenUnitNotMatch)
 
     return wrapper
 
@@ -131,7 +131,7 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
                 )
         else:
             if target_unit.base_unit != self.base_unit:
-                raise MismatchTokenUnit(
+                raise TokenUnitNotMatch(
                     f"Cannot convert {type(self)} to {target_unit} because of different token unit"
                 )
 
@@ -185,7 +185,7 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
             return self._value < other._value  # type: ignore
         if isinstance(other, AbstractTokenUnit):
             if self.base_unit != other.base_unit:
-                raise MismatchTokenUnit(
+                raise TokenUnitNotMatch(
                     f"Cannot compare token value with different base unit {other.base_unit} and {self.base_unit}"
                 )
         return self._value < self.__class__(other)._value
@@ -206,7 +206,7 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
             return self._value < other._value  # type: ignore
         if isinstance(other, AbstractTokenUnit):
             if self.base_unit != other.base_unit:
-                raise MismatchTokenUnit(
+                raise TokenUnitNotMatch(
                     f"Cannot compare token value with different base unit {other.base_unit} and {self.base_unit}"
                 )
         return self._value > self.__class__(other)._value
@@ -248,7 +248,7 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
     ) -> Union[BaseTokenUnit, Self]:
         if isinstance(other, AbstractTokenUnit):
             if other.base_unit != self.base_unit:
-                raise MismatchTokenUnit(
+                raise TokenUnitNotMatch(
                     f"Cannot add token value with different base token unit {other.base_unit} and {self.base_unit}"
                 )
             if other.__class__ != self.__class__:
@@ -289,7 +289,7 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
     ) -> Union[BaseTokenUnit, Self]:
         if isinstance(other, AbstractTokenUnit):
             if other.base_unit != self.base_unit:
-                raise MismatchTokenUnit(
+                raise TokenUnitNotMatch(
                     f"Cannot add token value with different base token unit {other.base_unit} and {self.base_unit}"
                 )
             if other.__class__ != self.__class__:
@@ -339,7 +339,7 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
     ) -> Union[Self, decimal.Decimal]:
         if isinstance(other, AbstractTokenUnit):
             if other.base_unit != self.base_unit:
-                raise MismatchTokenUnit(
+                raise TokenUnitNotMatch(
                     f"Cannot operate __div__ on token values with different base token unit {other.base_unit} and {self.base_unit}"
                 )
             if other.__class__ != self.__class__:
@@ -517,6 +517,6 @@ def to_int_if_drip_units(value: T) -> T:
 
 def to_int_if_drip_units(value: Union[AbstractTokenUnit[Drip], T]) -> Union[int, T]:
     if isinstance(value, AbstractTokenUnit):
-        # MismatchTokenUnit might arise
+        # TokenUnitNotMatch might arise
         return value.to(Drip).value
     return value
