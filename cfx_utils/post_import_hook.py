@@ -5,6 +5,9 @@ import functools
 from collections import (
     defaultdict
 )
+from types import (
+    ModuleType
+)
 from typing import (
     Any,
     Callable,
@@ -13,13 +16,20 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    TypeVar,
 )
+from typing_extensions import (
+    ParamSpec
+)
+
+T = TypeVar("T")
+P = ParamSpec("P")
 
 _post_import_hooks: Dict[Any, List[Any]] = defaultdict(list)
 
-def execute_module_and_post(exec: Callable, posts: Sequence[Callable]) -> Callable:
+def execute_module_and_post(exec: Callable[[ModuleType], Any], posts: Sequence[Callable[[ModuleType], Any]]) -> Callable[[ModuleType], Any]:
     @functools.wraps(exec)
-    def wrap(module: ModuleSpec) -> Callable:
+    def wrap(module: ModuleType) -> Any:
         rtn = exec(module)
         for post in posts:
             post(module)
@@ -30,7 +40,7 @@ class PostImportFinder:
     def __init__(self) -> None:
         self._skip: Set = set()
 
-    def find_spec(self, fullname: str, package: Optional[str]=None, *args: Sequence) -> Optional[ModuleSpec]:
+    def find_spec(self, fullname: str, package: Optional[str]=None, *args: Sequence[Any]) -> Optional[ModuleSpec]:
         # we simply ignore args
         if fullname not in _post_import_hooks:
             return None
@@ -52,8 +62,8 @@ class PostImportFinder:
         # _post_import_hooks[fullname] = []
         return spec
     
-def when_imported(fullname: str) -> Callable:
-    def decorate(func: Callable) -> Callable:
+def when_imported(fullname: str) -> Callable[[Callable[[ModuleType], T]], Callable[[ModuleType], T]]:
+    def decorate(func: Callable[[ModuleType], T]) -> Callable[[ModuleType], T]:
         if fullname in sys.modules:
             func(sys.modules[fullname])
         else:

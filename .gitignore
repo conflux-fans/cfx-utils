@@ -6,3 +6,4 @@ dist/
 .vscode/
 note.ipynb
 .hypothesis/
+.DS_STORE

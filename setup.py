@@ -10,7 +10,7 @@ extras_require = {
         "pytest>=6.2.5,<7",
         # "pytest-xdist",
         # "tox>=2.9.1,<3",
-        "cfx-address"
+        "cfx-address>=1.0.0b4",
     ],
     'lint': [
         # "flake8==3.8.3",
@@ -29,7 +29,6 @@ extras_require = {
         "wheel",
         "twine",
         "ipython",
-        "cfx-address>=1.0.0b4",
     ],
 }
 
