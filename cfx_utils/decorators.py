@@ -1,36 +1,34 @@
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
-    Type,
     TypeVar,
+    Generic,
+    Union,
 )
 from typing_extensions import (
     ParamSpec,
+    Concatenate
 )
 import functools
 
-T = TypeVar("T")
-R = TypeVar("R")
+R = TypeVar("R") # return value
 P = ParamSpec("P")
 
-if TYPE_CHECKING:
+class combomethod(Generic[P, R], object):
+    def __init__(self, method: Callable[Concatenate[Any, P], R]) -> None:
+        self.method = method
 
-    def combomethod(method: Callable[P, R]) -> Callable[P, R]:
-        ...
+    def __get__(
+        self, obj: object = None, objtype: Union[type, None] = None
+    ) -> Callable[P, R]:
+        @functools.wraps(self.method)
+        def _wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            if obj is not None:
+                # classmethod
+                return self.method(obj, *args, **kwargs)
+            else:
+                # not a classmethod
+                return self.method(objtype, *args, **kwargs)
 
-else:
+        return _wrapper
 
-    class combomethod(object):
-        def __init__(self, method: Callable) -> None:
-            self.method = method
-
-        def __get__(self, obj: T = None, objtype: Type[T] = None) -> Callable:
-            @functools.wraps(self.method)
-            def _wrapper(*args: Any, **kwargs: Any) -> Any:
-                if obj is not None:
-                    return self.method(obj, *args, **kwargs)
-                else:
-                    return self.method(objtype, *args, **kwargs)
-
-            return _wrapper
