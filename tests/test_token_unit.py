@@ -91,6 +91,9 @@ def test_equal():
     assert GDrip(10**9) == CFX(1)
     with pytest.warns(DangerEqualWarning):
         assert not Drip(1) == 1
+        
+    assert Drip(0) == 0
+    assert 0 == Drip(0)
     
 def test_mul():
     assert_type_and_value(CFX(2) * 2, CFX, 4)
@@ -132,15 +135,28 @@ def test_sub():
 
 def test_compare():
     with pytest.raises(InvalidTokenOperation):
-        assert CFX(2) >= 0 # type: ignore
+        assert CFX(2) >= 1 # type: ignore
     with pytest.raises(InvalidTokenOperation):
         assert 5 >= CFX(2) # type: ignore
     
     assert Drip(10**19) >= CFX(1)
+    assert Drip(10**19) >= Drip(10**18)
+    
     assert Drip(10**19) > CFX(1)
+    assert Drip(10**19) > Drip(10**18)
+    
     assert Drip(10**17) < CFX(1)
+    assert Drip(10**17) < Drip(10**18)
+    
     assert Drip(10**18) <= CFX(1)
+    assert Drip(10**17) <= Drip(10**18)
+    
     assert CFX(1) != Wei(10**18)
+    
+    assert Drip(1) > 0
+    assert Drip(1) >= 0
+    assert Drip(-1) < 0
+    assert Drip(-1) <= 0
     
     # # NOTE: this is valid operation because python will interpret the follow to
     # # Drip(10) > 5 and 5 > CFX(2)
