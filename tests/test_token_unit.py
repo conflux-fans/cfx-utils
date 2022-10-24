@@ -66,33 +66,6 @@ def test_to():
         
     with pytest.raises(TokenUnitNotMatch):
         CFX(3).to(Wei)
-        
-# def test_add_float():
-#     with pytest.raises(InvalidTokenOperation):
-#         with pytest.warns(FloatWarning):
-#             tmp = Drip(1) + 1.5
-        
-#     with pytest.raises(InvalidTokenOperation):
-#         with pytest.warns(FloatWarning):
-#             tmp = 1.5 + Drip(1)
-    
-#     with pytest.warns(FloatWarning):
-#         tmp = CFX(1) + 0.5
-#         assert_type_and_value(tmp, CFX, 1 + decimal.Decimal(0.5))
-#         assert_type_and_value(tmp, CFX, 1.5)
-
-#     with pytest.warns(FloatWarning):
-#         tmp =  0.5 + CFX(1)
-#         assert_type_and_value(tmp, CFX, 1 + decimal.Decimal(0.5))
-#         assert_type_and_value(tmp, CFX, 1.5)
-
-#     with pytest.raises(InvalidTokenOperation) as e:
-#         with pytest.warns(FloatWarning):
-#             tmp = CFX(1) + 1e-18
-
-#     with pytest.raises(InvalidTokenOperation) as e:
-#         with pytest.warns(FloatWarning):
-#             tmp = 1e-18 + CFX(1)
 
 def test_add_different_unit():
     # assert_type uses static language server to check
@@ -158,15 +131,10 @@ def test_sub():
         Drip(1) - Wei(1)
 
 def test_compare():
-    # assert CFX(2) < 5
-    # assert CFX(2) <= 3
-    # assert CFX(2) <= 2
-    # assert CFX(2) > 0
-    
-    # assert 5 >= CFX(2)
-    # assert 3 > CFX(2)
-    # assert 2 >= CFX(2)
-    # assert 0 < CFX(2)
+    with pytest.raises(InvalidTokenOperation):
+        assert CFX(2) >= 0 # type: ignore
+    with pytest.raises(InvalidTokenOperation):
+        assert 5 >= CFX(2) # type: ignore
     
     assert Drip(10**19) >= CFX(1)
     assert Drip(10**19) > CFX(1)

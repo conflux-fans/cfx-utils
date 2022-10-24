@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.0.0-beta.12
+
+* right type hint for `combomethod`
+* token unit type hints optimization
+* BREAKING CHANGE: token units are now disallowed to add/sub/compare with objects rather than token units 
+
 ## 1.0.0-beta.11
 
 * Migrate static type checking tool to Pylance because `Self` is still not supported by mypy
