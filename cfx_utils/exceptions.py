@@ -88,6 +88,11 @@ class InvalidTokenOperation(TokenError):
 class TokenValueWarning(UserWarning):
     pass
 
+class DangerEqualWarning(UserWarning):
+    """
+    Token unit is compared to another number which is not a token unit
+    """
+
 class FloatWarning(TokenValueWarning):
     """
     `float` type number is found to be used, which should be avoided by using `decimal.Decimal`

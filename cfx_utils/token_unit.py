@@ -21,6 +21,7 @@ from typing_extensions import (  # type: ignore
 import warnings
 from cfx_utils.decorators import combomethod
 from cfx_utils.exceptions import (
+    DangerEqualWarning,
     InvalidTokenValueType,
     InvalidTokenValuePrecision,
     InvalidTokenOperation,
@@ -74,6 +75,23 @@ def warn_float_value(func: Callable[P, T]) -> Callable[P, T]:
 
 
 class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
+    """
+    Token unit class providing safe and covenient operations. Token unit object can be directly used as transaction gas price or transaction value
+    
+    >>> from cfx_utils.token_unit import CFX, Drip
+    >>> CFX(1)
+    1 CFX
+    >>> CFX(1).value
+    1
+    >>> Drip(1)
+    1 Drip
+    >>> CFX(1) == Drip(1) * 10**18
+    True
+    >>> Drip(1) / 2
+    Traceback (most recent call last):
+        ...
+    cfx_utils.exceptions.InvalidTokenOperation: ...
+    """    
 
     decimals: int
     base_unit: Type[BaseTokenUnit]
@@ -175,12 +193,14 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         # note we use type() here
         if isinstance(other, AbstractTokenUnit):
             return (self.base_unit is other.base_unit) and (self.to_base_unit().value == other.to_base_unit().value)  # type: ignore
-        return self._value == other
+        if isinstance(other, int) or isinstance(other, float) or isinstance(other, decimal.Decimal):
+            warnings.warn(f"{self} is compared to {other}, which is not a token unit and __eq__ will always return False. It is suggested that you should compare by visiting `.value` such as `CFX(1).value == 1`", DangerEqualWarning)
+        return False
 
     @warn_float_value
     def __lt__(
         self,
-        other: Union["AbstractTokenUnit[BaseTokenUnit]", int, decimal.Decimal, float],
+        other: "AbstractTokenUnit[BaseTokenUnit]",
     ) -> bool:
         if type(self) == type(other):
             return self._value < other._value  # type: ignore
@@ -189,19 +209,21 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
                 raise TokenUnitNotMatch(
                     f"Cannot compare token value with different base unit {other.base_unit} and {self.base_unit}"
                 )
-        return self._value < self.__class__(other)._value
+            return self._value < self.__class__(other)._value
+        raise InvalidTokenOperation(f"not able to compare {self} and {other} because {other} is not a token unit")
+        # return self._value < self.__class__(other)._value
 
     @warn_float_value
     def __le__(
         self,
-        other: Union["AbstractTokenUnit[BaseTokenUnit]", int, decimal.Decimal, float],
+        other: "AbstractTokenUnit[BaseTokenUnit]",
     ) -> bool:
         return not (self > other)
 
     @warn_float_value
     def __gt__(
         self,
-        other: Union["AbstractTokenUnit[BaseTokenUnit]", int, decimal.Decimal, float],
+        other: "AbstractTokenUnit[BaseTokenUnit]",
     ) -> bool:
         if type(self) == type(other):
             return self._value < other._value  # type: ignore
@@ -210,12 +232,14 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
                 raise TokenUnitNotMatch(
                     f"Cannot compare token value with different base unit {other.base_unit} and {self.base_unit}"
                 )
-        return self._value > self.__class__(other)._value
+            return self._value > self.__class__(other)._value
+        raise InvalidTokenOperation(f"not able to compare {self} and {other} because {other} is not a token unit")
+        # return self._value > self.__class__(other)._value
 
     @warn_float_value
     def __ge__(
         self,
-        other: Union["AbstractTokenUnit[BaseTokenUnit]", int, decimal.Decimal, float],
+        other: "AbstractTokenUnit[BaseTokenUnit]",
     ) -> bool:
         return not (self < other)
 
@@ -237,15 +261,15 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
     def __add__(self, other: "AbstractTokenUnit[BaseTokenUnit]") -> BaseTokenUnit:  # type: ignore
         ...
 
-    @overload
-    def __add__(self, other: Union[int, decimal.Decimal, float]) -> Self:
-        ...
+    # @overload
+    # def __add__(self, other: Union[int, decimal.Decimal, float]) -> Self:
+    #     ...
 
     @warn_float_value
     @token_operation_error
     def __add__(  # type: ignore
         self,
-        other: Union["AbstractTokenUnit[BaseTokenUnit]", int, decimal.Decimal, float],
+        other: "AbstractTokenUnit[BaseTokenUnit]",
     ) -> Union[BaseTokenUnit, Self]:
         if isinstance(other, AbstractTokenUnit):
             if other.base_unit != self.base_unit:
@@ -257,13 +281,14 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
             return self.__class__(
                 decimal.Decimal(self._value) + decimal.Decimal(other._value)
             )
-        return self + self.__class__(other)
+        raise InvalidTokenValueType
+        # return self + self.__class__(other)
 
     # int/float/decimal.Decimal + CFX(1)
-    @warn_float_value
-    @token_operation_error
-    def __radd__(self, other: Union[int, decimal.Decimal, float]) -> Self:
-        return self + other
+    # @warn_float_value
+    # @token_operation_error
+    # def __radd__(self, other: Union[int, decimal.Decimal, float]) -> Self:
+    #     return self + other
 
     @overload
     def __sub__(self, other: Self) -> Self:
@@ -278,9 +303,9 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
     def __sub__(self, other: "AbstractTokenUnit[BaseTokenUnit]") -> BaseTokenUnit:  # type: ignore
         ...
 
-    @overload
-    def __sub__(self, other: Union[int, decimal.Decimal, float]) -> Self:
-        ...
+    # @overload
+    # def __sub__(self, other: Union[int, decimal.Decimal, float]) -> Self:
+    #     ...
 
     @warn_float_value
     @token_operation_error
@@ -298,13 +323,14 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
             return self.__class__(
                 decimal.Decimal(self._value) - decimal.Decimal(other._value)
             )
-        return self.__class__(self._value - decimal.Decimal(other))
+        raise InvalidTokenValueType
+        # return self.__class__(self._value - decimal.Decimal(other))
 
     # int/float/decimal.Decimal - CFX(1)
-    @warn_float_value
-    @token_operation_error
-    def __rsub__(self, other: Union[int, decimal.Decimal, float]) -> Self:
-        return self.__class__(other) - self
+    # @warn_float_value
+    # @token_operation_error
+    # def __rsub__(self, other: Union[int, decimal.Decimal, float]) -> Self:
+    #     return self.__class__(other) - self
 
     @warn_float_value
     @token_operation_error
