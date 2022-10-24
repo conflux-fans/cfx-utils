@@ -4,6 +4,9 @@ from typing import (
     Type,
     Union,
 )
+from typing_extensions import (
+    assert_type
+)
 import pytest
 from cfx_utils.token_unit import (
     AbstractTokenUnit, Drip, CFX, GDrip, TokenUnitFactory
@@ -29,7 +32,6 @@ def test_init():
     Drip(1)
     Drip.base_unit
     Drip(10**18)
-    Drip(1)
     Drip("0x1f4515", 16)
     CFX(1)
     CFX(decimal.Decimal(1) / 10**18)
@@ -91,19 +93,23 @@ def test_add_float():
             tmp = 1e-18 + CFX(1)
 
 def test_add_different_unit():
-    tmp = Drip(1) + CFX(1)
+    # assert_type uses static language server to check
+    # assert_type_and_value checks variable real type and value when program is running
 
-    assert_type_and_value(tmp, Drip, 1 + 10**18)
-    tmp = Drip(1) + Drip(1)
+    assert_type(Drip(1) + CFX(1), Drip)
+    assert_type_and_value(Drip(1) + CFX(1), Drip, 1 + 10**18)
     
-    tmp =  CFX(1) + Drip(1)
-    assert_type_and_value(tmp, Drip, 1 + 10**18)
+    assert_type(CFX(1) + Drip(1), Drip)
+    assert_type_and_value(CFX(1) + Drip(1), Drip, 1 + 10**18)
     
-    tmp = GDrip(1) + CFX(1)
-    assert_type_and_value(tmp, Drip, 10**9 + 10**18)
+    assert_type(GDrip(1) + CFX(1), Drip)
+    assert_type_and_value(GDrip(1) + CFX(1), Drip, 10**9 + 10**18)
+    
+    assert_type(CFX(1) + CFX(1), CFX)
+    assert_type(Drip(1) + Drip(1), Drip)
     
     with pytest.raises(InvalidTokenOperation):
-        m =  Wei(1) + CFX(1) # type: ignore
+        Wei(1) + CFX(1)
 
 def test_equal():
     assert Drip(1) == CFX(1 / decimal.Decimal(10**18))
@@ -116,7 +122,7 @@ def test_mul():
         assert_type_and_value(CFX(2) * 0.5, CFX, 1)
     with pytest.raises(InvalidTokenOperation) as e:
         with pytest.warns(FloatWarning):
-            tmp = CFX(2) * 1e-18
+            CFX(2) * 1e-18
     assert "due to unexpected precision" in str(e)
     
     with pytest.raises(InvalidTokenOperation):
@@ -126,7 +132,7 @@ def test_div():
     assert_type_and_value(CFX(1) / Drip(1), decimal.Decimal, 10**18)
     assert_type_and_value(CFX(1) / 10**18, CFX, Drip(1))
     with pytest.raises(InvalidTokenOperation):
-        tmp = Drip(1) / Wei(1)
+        Drip(1) / Wei(1)
 
 def test_repr():
     assert repr(CFX(1)) == "1 CFX"
@@ -145,7 +151,7 @@ def test_sub():
         assert_type_and_value(1 - CFX(2), CFX, -1)
         
     with pytest.raises(InvalidTokenOperation):
-        tmp = Drip(1) - Wei(1)
+        Drip(1) - Wei(1)
 
 def test_compare():
     assert CFX(2) < 5

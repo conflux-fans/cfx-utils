@@ -1,5 +1,6 @@
 import abc
 from typing import (
+    TYPE_CHECKING,
     Any,
     Dict,
     Type,
@@ -227,7 +228,7 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
     @overload
     def __add__(self, other: Self) -> Self:
         ...
-    
+
     @overload
     def __add__(self, other: "AbstractTokenUnit[Self]") -> Self: # type: ignore
         ...
@@ -467,6 +468,10 @@ class TokenUnitFactory:
 
     @classmethod
     def factory_base_unit(cls, unit_name: str) -> Type["AbstractBaseTokenUnit"]:
+        """
+        it is generally not recommended to use this function if the units to be produced is used frequently
+        because the type hints generated will somewhat not work as expected
+        """        
         BaseUnit = cast(
             Type["AbstractBaseTokenUnit"],
             type(
@@ -481,9 +486,13 @@ class TokenUnitFactory:
 
 
 # TODO: use metaclass to create class Drip, CFX and GDrip
-class Drip(AbstractBaseTokenUnit):
-    pass
 
+if TYPE_CHECKING:
+    class Drip(AbstractBaseTokenUnit["Drip"]):
+        pass
+else:
+    class Drip(AbstractBaseTokenUnit):
+        pass
 
 Drip.base_unit = Drip
 Drip.derived_units["Drip"] = Drip
