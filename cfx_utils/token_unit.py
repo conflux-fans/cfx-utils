@@ -3,6 +3,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
+    Literal,
     Type,
     Union,
     TypeVar,
@@ -189,18 +190,33 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
             )
 
     @warn_float_value
-    def __eq__(self, other: object) -> bool:
-        # note we use type() here
+    def __eq__(self, other: Union["AbstractTokenUnit[BaseTokenUnit]", Literal[0]]) -> bool: # type: ignore
+        """
+        whether self equals to other.
+        other is supposed to be a token unit or `0`. Other values are also viable but the result might be not as expected
+        ## If other is not a token unit nor `0`, `False` will always be returned.
+        
+        >>> CFX(0) == 0
+        True
+        >>> CFX(1) == 1
+        False
+        >>> CFX(1).value == 1
+        True
+        >>> CFX(1) == Drip(10**18)
+        True
+        """        
         if isinstance(other, AbstractTokenUnit):
             return (self.base_unit is other.base_unit) and (self.to_base_unit().value == other.to_base_unit().value)  # type: ignore
+        if other == 0:
+            return self._value == 0
         if isinstance(other, int) or isinstance(other, float) or isinstance(other, decimal.Decimal):
-            warnings.warn(f"{self} is compared to {other}, which is not a token unit and __eq__ will always return False. It is suggested that you should compare by visiting `.value` such as `CFX(1).value == 1`", DangerEqualWarning)
+            warnings.warn(f"{self} is compared to {other}, which is not a token unit nor zero, and __eq__ will always return False. It is suggested that you should compare by visiting `.value` such as `CFX(1).value == 1`", DangerEqualWarning)
         return False
 
     @warn_float_value
     def __lt__(
         self,
-        other: "AbstractTokenUnit[BaseTokenUnit]",
+        other: Union["AbstractTokenUnit[BaseTokenUnit]", Literal[0]],
     ) -> bool:
         if type(self) == type(other):
             return self._value < other._value  # type: ignore
@@ -210,23 +226,27 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
                     f"Cannot compare token value with different base unit {other.base_unit} and {self.base_unit}"
                 )
             return self._value < self.__class__(other)._value
+        if other == 0:
+            return self._value < 0
         raise InvalidTokenOperation(f"not able to compare {self} and {other} because {other} is not a token unit")
         # return self._value < self.__class__(other)._value
 
     @warn_float_value
     def __le__(
         self,
-        other: "AbstractTokenUnit[BaseTokenUnit]",
+        other: Union["AbstractTokenUnit[BaseTokenUnit]", Literal[0]],
     ) -> bool:
         return not (self > other)
 
     @warn_float_value
     def __gt__(
         self,
-        other: "AbstractTokenUnit[BaseTokenUnit]",
+        other: Union["AbstractTokenUnit[BaseTokenUnit]", Literal[0]],
     ) -> bool:
         if type(self) == type(other):
-            return self._value < other._value  # type: ignore
+            return self._value > other._value  # type: ignore
+        if other == 0:
+            return self._value > 0
         if isinstance(other, AbstractTokenUnit):
             if self.base_unit != other.base_unit:
                 raise TokenUnitNotMatch(
@@ -239,7 +259,7 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
     @warn_float_value
     def __ge__(
         self,
-        other: "AbstractTokenUnit[BaseTokenUnit]",
+        other: Union["AbstractTokenUnit[BaseTokenUnit]", Literal[0]],
     ) -> bool:
         return not (self < other)
 
