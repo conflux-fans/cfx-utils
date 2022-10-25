@@ -1,48 +1,57 @@
-import sys
 from typing import (
     TYPE_CHECKING,
     Any,
+    Dict,
     NewType,
     TypedDict,
     Union,
     Literal
 )
-# from eth_typing import AnyAddress
-from hexbytes import HexBytes
+
+from hexbytes import (
+    HexBytes,
+)
 from eth_typing.evm import (
     # Address,
     HexAddress,
     # ChecksumAddress,
     BlockNumber,
     ChecksumAddress,
-    Hash32
+    Hash32,
 )
 from eth_typing.encoding import (
     HexStr,
 )
 
-# from web3.types import (
-#     Nonce,
-#     _Hash32,
-# )
-from decimal import Decimal
+from cfx_utils.token_unit import (
+    CFX,
+    Drip,
+    GDrip,
+    AbstractDerivedTokenUnit,
+)
+
 
 if TYPE_CHECKING:
     # avoid recursive import
     from cfx_address import Base32Address
 
-### copy-paste definition from web3 
+### copy-paste definition from web3
 _Hash32 = Union[Hash32, bytes, HexStr, str]
 Nonce = NewType("Nonce", int)
 # copy-paste ended
 
-Drip = NewType("Drip", int)
-CFX = NewType("CFX", Decimal)
 Storage = NewType("Storage", int)
 
 AddressParam = Union["Base32Address", str]
 
-EpochLiteral = Literal["earliest", "latest_checkpoint", "latest_finalized", "latest_confirmed", "latest_state", "latest_mined"]
+EpochLiteral = Literal[
+    "earliest",
+    "latest_checkpoint",
+    "latest_finalized",
+    "latest_confirmed",
+    "latest_state",
+    "latest_mined",
+]
 EpochNumber = NewType("EpochNumber", int)
 EpochNumberParam = Union[EpochLiteral, EpochNumber, int]
 """Epoch param could be either EpochLiteral, or Epoch Number
@@ -59,34 +68,14 @@ TxDict = TypedDict(
         # addr or ens
         "from": AddressParam,
         "gas": int,
-        "gasPrice": Drip,
+        "gasPrice": Union[Drip, AbstractDerivedTokenUnit[Drip], int],
         "nonce": Nonce,
         "to": AddressParam,
-        "value": Drip,
+        "value": Union[Drip, AbstractDerivedTokenUnit[Drip], int],
         "epochHeight": int,
-        "storageLimit": Storage
+        "storageLimit": Storage,
     },
     total=False,
 )
 
-if sys.version_info >= (3,9):
-    TxParam = Union[TxDict, dict[str, Any]]
-else:
-    TxParam = Union[TxDict, dict]
-
-# __all__ = [
-#     "HexAddress",
-#     "ChecksumAddress",
-#     "Storage",
-#     "Drip",
-#     "Nonce",
-#     "Hash32"
-#     "_Hash32",
-#     "EpochLiteral",
-    
-#     "AddressParam",
-#     "EpochNumberParam",
-#     "BlockNumber",
-#     "TxDict",
-#     "TxParam",
-# ]
+TxParam = Union[TxDict, Dict[str, Any]]

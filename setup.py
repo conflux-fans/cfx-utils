@@ -10,12 +10,12 @@ extras_require = {
         "pytest>=6.2.5,<7",
         # "pytest-xdist",
         # "tox>=2.9.1,<3",
-        "cfx-address"
+        "cfx-address>=1.0.0b4",
     ],
     'lint': [
         # "flake8==3.8.3",
         # "isort>=4.2.15,<5",
-        # "mypy==0.782",
+        # "mypy"  # we use pylance to check type because there is bug to use mypy Self
         # "pydocstyle>=3.0.0,<4",
     ],
     'doc': [
@@ -29,12 +29,11 @@ extras_require = {
         "wheel",
         "twine",
         "ipython",
-        "cfx-address>=1.0.0b4",
     ],
 }
 
 extras_require['dev'] = (
-    extras_require['dev'] +  # noqa: W504
+    extras_require['dev'] +  # type: ignore
     extras_require['test'] +  # noqa: W504
     extras_require['lint'] +  # noqa: W504
     extras_require['doc']
@@ -48,7 +47,7 @@ with open('./README.md') as readme:
 setup(
     name='cfx-utils',
     # *IMPORTANT*: Don't manually change the version here. Use `make bump`, as described in readme
-    version='1.0.0-beta.6',
+    version='1.0.0-beta.11',
     description="""cfx-utils: Common utils for conflux python packages""",
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -69,7 +68,7 @@ setup(
     zip_safe=False,
     keywords='conflux',
     packages=find_packages(exclude=["tests", "tests.*"]),
-    # package_data={'cfx_typing': ['py.typed']},
+    package_data={'cfx_utils': ['py.typed']},
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Education",
