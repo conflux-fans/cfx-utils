@@ -3,9 +3,12 @@ from typing import (
     Any,
     Dict,
     NewType,
-    TypedDict,
     Union,
-    Literal
+)
+
+from typing_extensions import (
+    Literal,
+    TypedDict,
 )
 
 from hexbytes import (

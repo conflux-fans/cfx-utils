@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1,0.0-beta.14
+
+* fix: python3.7 support for TypedDict and Literal
+
 ## 1.0.0-beta.13
 
 * support python 3.7 and 3.11
