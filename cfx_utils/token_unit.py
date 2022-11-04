@@ -3,7 +3,6 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
-    Literal,
     Type,
     Union,
     TypeVar,
@@ -18,6 +17,7 @@ import numbers
 from typing_extensions import (  # type: ignore
     Self,
     ParamSpec,
+    Literal,
 )
 import warnings
 from cfx_utils.decorators import combomethod

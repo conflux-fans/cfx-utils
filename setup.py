@@ -55,7 +55,7 @@ setup(
     author_email='wenda.zhang@confluxnetwork.org',
     url='https://github.com/conflux-fans/cfx-utils',
     include_package_data=True,
-    python_requires='>=3.8, <3.11',
+    python_requires='>=3.7',
     install_requires=[
         # "cfx-address>=1.0.0b1",
         "typing_extensions>=4.2.0",
