@@ -3,9 +3,12 @@ from typing import (
     Any,
     Dict,
     NewType,
-    TypedDict,
     Union,
-    Literal
+)
+
+from typing_extensions import (
+    Literal,
+    TypedDict,
 )
 
 from hexbytes import (
@@ -51,6 +54,7 @@ EpochLiteral = Literal[
     "latest_confirmed",
     "latest_state",
     "latest_mined",
+    "pending",
 ]
 EpochNumber = NewType("EpochNumber", int)
 EpochNumberParam = Union[EpochLiteral, EpochNumber, int]

@@ -47,7 +47,7 @@ with open('./README.md') as readme:
 setup(
     name='cfx-utils',
     # *IMPORTANT*: Don't manually change the version here. Use `make bump`, as described in readme
-    version='1.0.0-beta.13',
+    version='1.0.0',
     description="""cfx-utils: Common utils for conflux python packages""",
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -60,7 +60,7 @@ setup(
         # "cfx-address>=1.0.0b1",
         "typing_extensions>=4.2.0",
         "hexbytes",
-        "eth-typing",
+        "eth-typing>=2.0.0",
     ],
     extras_require=extras_require,
     py_modules=['cfx_utils'],
