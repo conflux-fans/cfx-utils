@@ -1,6 +1,10 @@
 # CHANGELOG
 
-## 1,0.0-beta.15
+## 1.0.0
+
+* support `pending` as epoch tag
+
+## 1.0.0-beta.15
 
 * loosen eth-* dependency versions
 

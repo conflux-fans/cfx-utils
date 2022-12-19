@@ -54,6 +54,7 @@ EpochLiteral = Literal[
     "latest_confirmed",
     "latest_state",
     "latest_mined",
+    "pending",
 ]
 EpochNumber = NewType("EpochNumber", int)
 EpochNumberParam = Union[EpochLiteral, EpochNumber, int]
