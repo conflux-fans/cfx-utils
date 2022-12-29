@@ -10,6 +10,7 @@ from typing import (
     overload,
     Generic,
     Callable,
+    ClassVar,
 )
 
 import decimal
@@ -77,8 +78,9 @@ def warn_float_value(func: Callable[P, T]) -> Callable[P, T]:
 
 class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
     """
-    Token unit class providing safe and covenient operations. Token unit object can be directly used as transaction gas price or transaction value
-    
+    :class:`~AbstractTokenUnit` provides the implementation of token units computing operations.
+    Token unit object can be directly used as transaction gas price or transaction value
+
     >>> from cfx_utils.token_unit import CFX, Drip
     >>> CFX(1)
     1 CFX
@@ -92,10 +94,26 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
     Traceback (most recent call last):
         ...
     cfx_utils.exceptions.InvalidTokenOperation: ...
-    """    
+    """
 
-    decimals: int
+    decimals: ClassVar[int]
+    """
+    The class variable to defining relation between current token unit and :attr:`~base_unit`.
+    
+    >>> from cfx_utils import CFX, Drip
+    >>> CFX.decimals
+    18
+    >>> Drip.decimals
+    0
+    """    
     base_unit: Type[BaseTokenUnit]
+    """
+    A class variable which is a class object referring to the base unit
+    
+    >>> from cfx_uitls import CFX
+    >>> CFX.base_unit
+    <class 'cfx_utils.token_unit.Drip'>
+    """  
     _value: Union[int, decimal.Decimal]
 
     @abc.abstractmethod
@@ -115,10 +133,6 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
     def value(self):
         return self._value
 
-    @value.setter
-    def value(self, value: Any):
-        self._value = value
-
     @overload
     def to(self, target_unit: str) -> "AbstractTokenUnit[BaseTokenUnit]":
         ...
@@ -131,12 +145,19 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         self, target_unit: Union[str, Type[AnyTokenUnit]]
     ) -> Union[AnyTokenUnit, "AbstractTokenUnit[BaseTokenUnit]"]:
         """
-        return a new TokenUnit object in target_unit
+        Return a new TokenUnit object in target_unit
 
-        :param Union[str, Type[AnyTokenUnit]] target_unit: _description_
-        :raises ValueError: _description_
-        :raises InvalidTokenValuePrecision: _description_
-        :return AnyTokenUnit: _description_
+        :param Union[str,Type[AnyTokenUnit]] target_unit: the target token unit to convert to
+        :return: a new token unit object of target unit
+        
+        :examples:
+        
+        >>> from cfx_utils.token_unit import CFX, GDrip
+        >>> val = CFX(1)
+        >>> val.to(GDrip)
+        1000000000 GDrip
+        >>> val.to("Drip")
+        1000000000000000000 Drip
         """
         # self -> base --> target
         if isinstance(target_unit, str):
@@ -165,6 +186,15 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         return cast(AnyTokenUnit, target_unit(value))
 
     def to_base_unit(self) -> BaseTokenUnit:
+        """
+        Return a new token unit object in :attr:`~base_unit`
+
+        :examples:
+        
+        >>> from cfx_utils import CFX
+        >>> CFX(1).to_base_unit()
+        1000000000000000000 Drip
+        """        
         return self.to(self.base_unit)
 
     @combomethod
@@ -192,13 +222,15 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
     @warn_float_value
     def __eq__(self, other: Union["AbstractTokenUnit[BaseTokenUnit]", Literal[0]]) -> bool: # type: ignore
         """
-        whether self equals to other.
-        other is supposed to be a token unit or `0`. Other values are also viable but the result might be not as expected
-        ## If other is not a token unit nor `0`, `False` will always be returned.
+        Whether self equals to other.
+        other is supposed to be a token unit or `0`. Other values are also viable but the result might be not as expected.
+        If other is not a token unit nor `0`, `False` will always be returned.
+        
+        :raises DangerEqualWarning: when the compared param is not `0` or another token unit
         
         >>> CFX(0) == 0
         True
-        >>> CFX(1) == 1
+        >>> CFX(1) == 1 # will raise a warning
         False
         >>> CFX(1).value == 1
         True
@@ -401,7 +433,7 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
 
 
 class AbstractDerivedTokenUnit(AbstractTokenUnit[BaseTokenUnit], abc.ABC):
-    decimals: int
+    decimals: ClassVar[int]
     _value: decimal.Decimal
 
     def __init__(
@@ -418,6 +450,34 @@ class AbstractDerivedTokenUnit(AbstractTokenUnit[BaseTokenUnit], abc.ABC):
 
     @property
     def value(self) -> decimal.Decimal:
+        """
+        Returns the token value as decimal.Decimal.
+
+        :return decimal.Decimal: returns the token value
+        
+        Can be set using an int, decimal.Decimal, str or float 
+        
+        :raises FloatWarning: it is recommended to use decimal.Decimal, 
+            when a float-typed value is used to set value, a warning will be raised
+        :raises InvalidTokenValueType: the value type is not int, Decimal, str or float
+        :raises InvalidTokenValuePrecision: the value cannot be divided 
+            exactly by its base unit
+
+        :examples:
+        
+        >>> from cfx_utils import CFX
+        >>> val = CFX(1)
+        >>> val.value = 0.5 # will raise a FloatWarning
+        >>> val
+        0.5 CFX
+        >>> val.value = 1/3
+        Traceback (most recent call last):
+            ...
+        cfx_utils.exceptions.InvalidTokenValuePrecision: Not able to initialize <class 'cfx_utils.token_unit.CFX'> 
+        with <class 'decimal.Decimal'> 0.333333333333333314829616256247390992939472198486328125 due to unexpected precision. 
+        Try representing 0.333333333333333314829616256247390992939472198486328125 in <class 'decimal.Decimal'> properly, 
+        or init token value in int from <class 'cfx_utils.token_unit.Drip'>
+        """        
         return self._value
 
     @value.setter
@@ -436,7 +496,7 @@ class AbstractDerivedTokenUnit(AbstractTokenUnit[BaseTokenUnit], abc.ABC):
         if not self._check_value(value):
             raise InvalidTokenValuePrecision(
                 f"Not able to initialize {cls} with {type(value)} {value} due to unexpected precision. "
-                f"Try represent {value} in {decimal.Decimal} properly, or init token value in int from {cls.base_unit}"
+                f"Try representing {value} in {decimal.Decimal} properly, or init token value in int from {cls.base_unit}"
             )
         self._warn_negative_token_value(value)
         self._value = value
@@ -444,7 +504,7 @@ class AbstractDerivedTokenUnit(AbstractTokenUnit[BaseTokenUnit], abc.ABC):
 
 class AbstractBaseTokenUnit(AbstractTokenUnit[Self], abc.ABC):
     derived_units: Dict[str, Type["AbstractTokenUnit[Self]"]] = {}
-    decimals: int = 0
+    decimals: ClassVar[int] = 0
     base_unit: Type[Self]
     _value: int
 
@@ -479,6 +539,22 @@ class AbstractBaseTokenUnit(AbstractTokenUnit[Self], abc.ABC):
         value: Union[str, int, decimal.Decimal, float, AbstractTokenUnit[Self]],
         base: int = 10,
     ):
+        """
+        Initialize a token object of base unit (e.g. Drip). The minimum unit is 1.
+        Error will be raised if `value` and `base` are not valid.
+
+        :param Union[str,int,decimal.Decimal,float,AbstractTokenUnit[Self]] value: 
+            value to init the token, should be a number which can convert to int or
+            another token unit which share the same 
+        :param int base: base to init a str-typed value, defaults to 10
+        
+        >>> from cfx_utils.token_unit import Drip
+        >>> Drip(10)
+        10 Drip
+        >>> Drip("0x10", base=16)
+        16 Drip
+        >>> Drip(0.5)
+        """        
         if isinstance(value, AbstractTokenUnit):
             super().__init__(value)
             return
@@ -538,6 +614,9 @@ if TYPE_CHECKING:
         pass
 else:
     class Drip(AbstractBaseTokenUnit):
+        """
+        The base token unit used in Conflux, which corresponds to Ethereum's Wei
+        """        
         pass
 
 Drip.base_unit = Drip
@@ -545,7 +624,11 @@ Drip.derived_units["Drip"] = Drip
 
 
 class CFX(AbstractDerivedTokenUnit[Drip]):
-    decimals: int = 18
+    """
+    A derived token unit from :class:`~Drip` in Conflux, which corresponds to Ethereum's Ether.
+    1 CFX = 10**18 Drip
+    """  
+    decimals: ClassVar[int] = 18
     base_unit = Drip
 
 
@@ -553,7 +636,11 @@ Drip.register_derived_units(CFX)
 
 
 class GDrip(AbstractDerivedTokenUnit[Drip]):
-    decimals: int = 9
+    """
+    A derived token unit from :class:`~Drip` in Conflux, which corresponds to Ethereum's GWei.
+    1 GDrip = 10**9 Drip
+    """
+    decimals: ClassVar[int] = 9
     base_unit = Drip
 
 
@@ -571,6 +658,12 @@ def to_int_if_drip_units(value: T) -> T:
 
 
 def to_int_if_drip_units(value: Union[AbstractTokenUnit[Drip], T]) -> Union[int, T]:
+    """
+    | A util function to convert token units derived from :class:`~Drip` to :class:`~int`.
+    | If the input is in token unit derived from :class:`~Drip`, 
+        then return a int corresponding to token value in Drip.
+    | Else return the original input
+    """    
     if isinstance(value, AbstractTokenUnit):
         # TokenUnitNotMatch might arise
         return value.to(Drip).value
