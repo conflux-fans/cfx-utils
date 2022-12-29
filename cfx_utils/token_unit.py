@@ -15,7 +15,7 @@ from typing import (
 
 import decimal
 import numbers
-from typing_extensions import (  # type: ignore
+from typing_extensions import (
     Self,
     ParamSpec,
     Literal,
@@ -96,22 +96,22 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
     cfx_utils.exceptions.InvalidTokenOperation: ...
     """
 
-    decimals: ClassVar[int]
+    _decimals: ClassVar[int]
     """
-    The class variable to defining relation between current token unit and :attr:`~base_unit`.
+    The class variable to defining relation between current token unit and :attr:`~_base_unit`.
     
     >>> from cfx_utils import CFX, Drip
-    >>> CFX.decimals
+    >>> CFX._decimals
     18
-    >>> Drip.decimals
+    >>> Drip._decimals
     0
     """    
-    base_unit: Type[BaseTokenUnit]
+    _base_unit: Type[BaseTokenUnit]
     """
     A class variable which is a class object referring to the base unit
     
     >>> from cfx_uitls import CFX
-    >>> CFX.base_unit
+    >>> CFX._base_unit
     <class 'cfx_utils.token_unit.Drip'>
     """  
     _value: Union[int, decimal.Decimal]
@@ -163,7 +163,7 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         if isinstance(target_unit, str):
             target_unit = cast(
                 Type[AnyTokenUnit],
-                self.base_unit.derived_units.get(target_unit, target_unit),
+                self._base_unit.get_derived_units().get(target_unit, target_unit)
             )
             # if no type object is found,
             if isinstance(target_unit, str):
@@ -171,23 +171,23 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
                     f"Cannot convert {type(self)} to {target_unit} because {target_unit} is not registered"
                 )
         else:
-            if target_unit.base_unit != self.base_unit:
+            if target_unit._base_unit != self._base_unit:
                 raise TokenUnitNotMatch(
                     f"Cannot convert {type(self)} to {target_unit} because of different token unit"
                 )
 
-        value = decimal.Decimal(self._value) * decimal.Decimal(10**self.decimals) / decimal.Decimal(10**target_unit.decimals)  # type: ignore
+        value = decimal.Decimal(self._value) * decimal.Decimal(10**self._decimals) / decimal.Decimal(10**target_unit._decimals)
         if issubclass(target_unit, AbstractBaseTokenUnit):
             if value % 1 != 0:
                 # expected to be unreachable because check is done when self is inited
                 raise InvalidTokenValuePrecision("Unreachable")
 
-        # conversion_factor = self.base_unit.derived_units_conversions[target_unit]
+        # conversion_factor = self._base_unit.derived_units_conversions[target_unit]
         return cast(AnyTokenUnit, target_unit(value))
 
     def to_base_unit(self) -> BaseTokenUnit:
         """
-        Return a new token unit object in :attr:`~base_unit`
+        Return a new token unit object in :attr:`~_base_unit`
 
         :examples:
         
@@ -195,11 +195,11 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         >>> CFX(1).to_base_unit()
         1000000000000000000 Drip
         """        
-        return self.to(self.base_unit)
+        return self.to(self._base_unit)
 
     @combomethod
     def _check_value(cls, value: Union[int, float, decimal.Decimal]) -> None:
-        return decimal.Decimal(value) * (10**cls.decimals) % 1 == 0
+        return decimal.Decimal(value) * (10**cls._decimals) % 1 == 0
 
     @combomethod
     def _warn_float_value(cls, value: Any) -> None:
@@ -238,7 +238,7 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         True
         """        
         if isinstance(other, AbstractTokenUnit):
-            return (self.base_unit is other.base_unit) and (self.to_base_unit().value == other.to_base_unit().value)  # type: ignore
+            return (self._base_unit is other._base_unit) and (self.to_base_unit().value == other.to_base_unit().value)
         if other == 0:
             return self._value == 0
         if isinstance(other, int) or isinstance(other, float) or isinstance(other, decimal.Decimal):
@@ -253,9 +253,9 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         if type(self) == type(other):
             return self._value < other._value  # type: ignore
         if isinstance(other, AbstractTokenUnit):
-            if self.base_unit != other.base_unit:
+            if self._base_unit != other._base_unit:
                 raise TokenUnitNotMatch(
-                    f"Cannot compare token value with different base unit {other.base_unit} and {self.base_unit}"
+                    f"Cannot compare token value with different base unit {other._base_unit} and {self._base_unit}"
                 )
             return self._value < self.__class__(other)._value
         if other == 0:
@@ -280,9 +280,9 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         if other == 0:
             return self._value > 0
         if isinstance(other, AbstractTokenUnit):
-            if self.base_unit != other.base_unit:
+            if self._base_unit != other._base_unit:
                 raise TokenUnitNotMatch(
-                    f"Cannot compare token value with different base unit {other.base_unit} and {self.base_unit}"
+                    f"Cannot compare token value with different base unit {other._base_unit} and {self._base_unit}"
                 )
             return self._value > self.__class__(other)._value
         raise InvalidTokenOperation(f"not able to compare {self} and {other} because {other} is not a token unit")
@@ -324,9 +324,9 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         other: "AbstractTokenUnit[BaseTokenUnit]",
     ) -> Union[BaseTokenUnit, Self]:
         if isinstance(other, AbstractTokenUnit):
-            if other.base_unit != self.base_unit:
+            if other._base_unit != self._base_unit:
                 raise TokenUnitNotMatch(
-                    f"Cannot add token value with different base token unit {other.base_unit} and {self.base_unit}"
+                    f"Cannot add token value with different base token unit {other._base_unit} and {self._base_unit}"
                 )
             if other.__class__ != self.__class__:
                 return self.to_base_unit() + other.to_base_unit()
@@ -366,9 +366,9 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         other: Union["AbstractTokenUnit[BaseTokenUnit]", int, decimal.Decimal, float],
     ) -> Union[BaseTokenUnit, Self]:
         if isinstance(other, AbstractTokenUnit):
-            if other.base_unit != self.base_unit:
+            if other._base_unit != self._base_unit:
                 raise TokenUnitNotMatch(
-                    f"Cannot add token value with different base token unit {other.base_unit} and {self.base_unit}"
+                    f"Cannot add token value with different base token unit {other._base_unit} and {self._base_unit}"
                 )
             if other.__class__ != self.__class__:
                 return self.to_base_unit() - other.to_base_unit()
@@ -417,9 +417,9 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         other: Union["AbstractTokenUnit[BaseTokenUnit]", int, decimal.Decimal, float],
     ) -> Union[Self, decimal.Decimal]:
         if isinstance(other, AbstractTokenUnit):
-            if other.base_unit != self.base_unit:
+            if other._base_unit != self._base_unit:
                 raise TokenUnitNotMatch(
-                    f"Cannot operate __div__ on token values with different base token unit {other.base_unit} and {self.base_unit}"
+                    f"Cannot operate __div__ on token values with different base token unit {other._base_unit} and {self._base_unit}"
                 )
             if other.__class__ != self.__class__:
                 return decimal.Decimal(
@@ -432,8 +432,8 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         return hash(str(self))
 
 
-class AbstractDerivedTokenUnit(AbstractTokenUnit[BaseTokenUnit], abc.ABC):
-    decimals: ClassVar[int]
+class AbstractDerivedTokenUnit(AbstractTokenUnit[BaseTokenUnit]):
+    _decimals: ClassVar[int]
     _value: decimal.Decimal
 
     def __init__(
@@ -445,8 +445,8 @@ class AbstractDerivedTokenUnit(AbstractTokenUnit[BaseTokenUnit], abc.ABC):
         if isinstance(value, AbstractTokenUnit):
             super().__init__(value)
             return
-
-        self.value = value  # type: ignore
+        # set using value setter
+        self.value = value
 
     @property
     def value(self) -> decimal.Decimal:
@@ -496,16 +496,16 @@ class AbstractDerivedTokenUnit(AbstractTokenUnit[BaseTokenUnit], abc.ABC):
         if not self._check_value(value):
             raise InvalidTokenValuePrecision(
                 f"Not able to initialize {cls} with {type(value)} {value} due to unexpected precision. "
-                f"Try representing {value} in {decimal.Decimal} properly, or init token value in int from {cls.base_unit}"
+                f"Try representing {value} in {decimal.Decimal} properly, or init token value in int from {cls._base_unit}"
             )
         self._warn_negative_token_value(value)
         self._value = value
 
 
 class AbstractBaseTokenUnit(AbstractTokenUnit[Self], abc.ABC):
-    derived_units: Dict[str, Type["AbstractTokenUnit[Self]"]] = {}
-    decimals: ClassVar[int] = 0
-    base_unit: Type[Self]
+    _derived_units: Dict[str, Type["AbstractTokenUnit[Self]"]] = {}
+    _decimals: ClassVar[int] = 0
+    _base_unit: Type[Self]
     _value: int
 
     @property
@@ -566,7 +566,23 @@ class AbstractBaseTokenUnit(AbstractTokenUnit[Self], abc.ABC):
     def register_derived_units(
         cls, derived_unit: Type["AbstractDerivedTokenUnit[Self]"]
     ) -> None:
-        cls.derived_units[derived_unit.__name__] = derived_unit
+        if derived_unit.__name__ in cls._derived_units:
+            raise ValueError
+        derived_unit._base_unit = cls
+        cls._derived_units[derived_unit.__name__] = derived_unit
+    
+    @classmethod
+    def get_derived_units(cls) -> Dict[str, Type["AbstractTokenUnit[Self]"]]:
+        """
+        :return Dict: returns a dict object containing token_name -> token_unit_class mapping
+        
+        >>> from cfx_utils.token_unit import Drip
+        >>> Drip.get_derived_units()
+        {'Drip': <class 'cfx_utils.token_unit.Drip'>, 
+        'CFX': <class 'cfx_utils.token_unit.CFX'>, 
+        'GDrip': <class 'cfx_utils.token_unit.GDrip'>}
+        """        
+        return cls._derived_units
 
 
 # This class is unused because type hint is not friendly if registered by factory
@@ -577,16 +593,16 @@ class TokenUnitFactory:
     def factory_derived_unit(
         cls, unit_name: str, decimals: int, base_unit: Type[BaseTokenUnit]
     ) -> Type["AbstractDerivedTokenUnit[BaseTokenUnit]"]:
-        DerivedUnit = cast(
+        derived_unit = cast(
             Type[AbstractDerivedTokenUnit[type(base_unit)]],
             type(
                 unit_name,
                 (AbstractDerivedTokenUnit[type(base_unit)],),
-                {"decimals": decimals, "base_unit": base_unit},
+                {"_decimals": decimals, "_base_unit": base_unit},
             ),
         )
-        base_unit.register_derived_units(DerivedUnit)
-        return DerivedUnit
+        base_unit.register_derived_units(derived_unit)
+        return derived_unit
 
     @classmethod
     def factory_base_unit(cls, unit_name: str) -> Type["AbstractBaseTokenUnit"]:
@@ -602,8 +618,7 @@ class TokenUnitFactory:
                 {},
             ),
         )
-        BaseUnit.derived_units[unit_name] = BaseUnit
-        BaseUnit.base_unit = BaseUnit
+        BaseUnit.register_derived_units(BaseUnit) # type: ignore
         return BaseUnit
 
 
@@ -615,21 +630,20 @@ if TYPE_CHECKING:
 else:
     class Drip(AbstractBaseTokenUnit):
         """
-        The base token unit used in Conflux, which corresponds to Ethereum's Wei
+        The base token unit used in Conflux, corresponding to Ethereum's Wei
         """        
         pass
 
-Drip.base_unit = Drip
-Drip.derived_units["Drip"] = Drip
+    Drip.register_derived_units(Drip)
 
 
 class CFX(AbstractDerivedTokenUnit[Drip]):
     """
-    A derived token unit from :class:`~Drip` in Conflux, which corresponds to Ethereum's Ether.
+    A derived token unit from :class:`~Drip` in Conflux, corresponding to Ethereum's Ether.
     1 CFX = 10**18 Drip
     """  
-    decimals: ClassVar[int] = 18
-    base_unit = Drip
+    _decimals: ClassVar[int] = 18
+    _base_unit = Drip
 
 
 Drip.register_derived_units(CFX)
@@ -640,8 +654,8 @@ class GDrip(AbstractDerivedTokenUnit[Drip]):
     A derived token unit from :class:`~Drip` in Conflux, which corresponds to Ethereum's GWei.
     1 GDrip = 10**9 Drip
     """
-    decimals: ClassVar[int] = 9
-    base_unit = Drip
+    _decimals: ClassVar[int] = 9
+    _base_unit = Drip
 
 
 Drip.register_derived_units(GDrip)
