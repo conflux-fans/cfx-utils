@@ -32,7 +32,6 @@ def assert_type_and_value(instance: object, typ: Type[Any], val: Union[int, deci
 
 def test_init():
     Drip(1)
-    Drip.base_unit
     Drip(10**18)
     Drip("0x1f4515", 16)
     CFX(1)
