@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.0.1
+
+* change members `decimals`, `base_unit` and `derived_units` to protected in `token_unit.py`
+* doc: add docstring to `token_unit.py`
+
 ## 1.0.0
 
 * support `pending` as epoch tag
