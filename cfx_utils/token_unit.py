@@ -126,7 +126,10 @@ class AbstractTokenUnit(Generic[BaseTokenUnit], numbers.Number):
         value: Union["AbstractTokenUnit[BaseTokenUnit]", int, decimal.Decimal, float],
     ):
         if isinstance(value, AbstractTokenUnit):
-            self._value = value.to_base_unit().value
+            if self._decimals == 0:
+                self._value = value.to_base_unit().value
+            else:
+                self._value = decimal.Decimal(value.to_base_unit().value) / decimal.Decimal(10**self._decimals)
             return
         elif isinstance(value, float):
             raise Exception("unreachable")
