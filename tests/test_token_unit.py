@@ -38,6 +38,10 @@ def test_init():
     CFX(decimal.Decimal(1) / 10**18)
     CFX("0.000000001")
     
+    assert GDrip(Drip(10**9)) == GDrip(1)
+    assert CFX(GDrip(1)) == CFX(decimal.Decimal(1) / 10**9) == Drip(10**9)
+    assert Drip(CFX(1)) == Drip(10**18)
+    
     with pytest.warns(FloatWarning):
         CFX(1.5)
     with pytest.warns(FloatWarning):
@@ -172,3 +176,7 @@ def test_value():
         tmp.value = 3.0
     with pytest.raises(InvalidTokenValueType):
         tmp.value = 0.5
+
+def test_min():
+    a = Drip(120*10**9)+GDrip(3)
+    assert min(a, GDrip(150)) == a

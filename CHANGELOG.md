@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.2
+
+* fix: fix a bug when converting token units
+
 ## 1.0.1
 
 * change members `decimals`, `base_unit` and `derived_units` to protected in `token_unit.py`
