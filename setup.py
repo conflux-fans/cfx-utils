@@ -47,7 +47,7 @@ with open('./README.md') as readme:
 setup(
     name='cfx-utils',
     # *IMPORTANT*: Don't manually change the version here. Use `make bump`, as described in readme
-    version='1.0.2',
+    version='1.0.3',
     description="""cfx-utils: Common utils for conflux python packages""",
     long_description=long_description,
     long_description_content_type='text/markdown',
