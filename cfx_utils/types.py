@@ -64,15 +64,14 @@ EpochNumberParam = Union[EpochLiteral, EpochNumber, int]
 # ChainId = Union[int, HexStr]
 
 # syntax b/c "from" keyword not allowed w/ class construction
-TxDict = TypedDict(
-    "TxDict",
+BaseTxDict = TypedDict(
+    "BaseTxDict",
     {
         "chainId": int,
         "data": Union[bytes, HexStr],
         # addr or ens
         "from": AddressParam,
         "gas": int,
-        "gasPrice": Union[Drip, AbstractDerivedTokenUnit[Drip], int],
         "nonce": Nonce,
         "to": AddressParam,
         "value": Union[Drip, AbstractDerivedTokenUnit[Drip], int],
@@ -82,6 +81,17 @@ TxDict = TypedDict(
     total=False,
 )
 
+class LegacyTxDict(BaseTxDict, total=False):
+    gasPrice: Union[Drip, AbstractDerivedTokenUnit[Drip], int]
+    
+class TypedTxDict(BaseTxDict, total=False):
+    type: Union[int, HexStr]
+    
+class CIP1559TxDict(TypedTxDict, total=False):
+    maxFeePerGas: Union[Drip, AbstractDerivedTokenUnit[Drip], int]
+    maxPriorityFeePerGas: Union[Drip, AbstractDerivedTokenUnit[Drip], int]
+
+TxDict = Union[LegacyTxDict, TypedTxDict, CIP1559TxDict]
 TxParam = Union[TxDict, Dict[str, Any]]
 
 __all__ = [
