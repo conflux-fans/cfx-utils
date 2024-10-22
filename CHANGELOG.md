@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 1.0.5
+
+* Add support for python 3.12 & 3.13
+* Deprecate support for python 3.7
+
+## 1.0.4
+
+* Remove `Base32Address` from `AddressParam` definition
+
+## 1.0.3
+
+* Update types for typed tx dict
+
 ## 1.0.2
 
 * fix: fix a bug when converting token units
