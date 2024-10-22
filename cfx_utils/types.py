@@ -33,11 +33,6 @@ from cfx_utils.token_unit import (
     AbstractDerivedTokenUnit,
 )
 
-
-if TYPE_CHECKING:
-    # avoid recursive import
-    from cfx_address import Base32Address
-
 ### copy-paste definition from web3
 _Hash32 = Union[Hash32, bytes, HexStr, str]
 Nonce = NewType("Nonce", int)
@@ -45,7 +40,7 @@ Nonce = NewType("Nonce", int)
 
 Storage = NewType("Storage", int)
 
-AddressParam = Union["Base32Address", str]
+AddressParam = str
 
 EpochLiteral = Literal[
     "earliest",
