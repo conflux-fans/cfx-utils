@@ -7,10 +7,10 @@ from setuptools import (
 
 extras_require = {
     'test': [
-        "pytest>=6.2.5,<7",
+        "pytest>=8,<9",
         # "pytest-xdist",
         # "tox>=2.9.1,<3",
-        "cfx-address>=1.0.0b4",
+        "cfx-address>=1.2.0",
     ],
     'lint': [
         # "flake8==3.8.3",
@@ -61,6 +61,7 @@ setup(
         "typing_extensions>=4.2.0",
         "hexbytes",
         "eth-typing>=2.0.0",
+        "eth-utils<5,>=2.1.0",
     ],
     extras_require=extras_require,
     py_modules=['cfx_utils'],
