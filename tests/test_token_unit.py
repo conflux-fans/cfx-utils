@@ -24,11 +24,18 @@ from cfx_utils.exceptions import (
 
 Wei = TokenUnitFactory.factory_base_unit("Wei")
 
-def assert_type_and_value(instance: object, typ: Type[Any], val: Union[int, decimal.Decimal, float, AbstractTokenUnit[Drip]]) -> None:
-    assert type(instance) == typ
-    if instance == val:
-        return 
-    assert instance.value == val # type: ignore
+
+def assert_type_and_value(
+    instance: object,
+    typ: Type[Any],
+    val: Union[int, decimal.Decimal, float]
+) -> None:
+    assert type(instance) is typ
+    try:
+        assert instance.value == val  # type: ignore
+    except AttributeError:
+        assert instance == val
+
 
 def test_init():
     Drip(1)
@@ -60,9 +67,9 @@ def test_init():
     
 def test_to():
     instance1 = Drip(1).to(CFX)
-    assert_type_and_value(instance1, CFX, decimal.Decimal(1) / 10 ** 18)
+    assert_type_and_value(instance1, CFX, decimal.Decimal(1) / decimal.Decimal(10 ** 18))
     instance2 = CFX(1).to(Drip)
-    assert_type_and_value(instance2, Drip, 10 ** 18)
+    assert_type_and_value(instance2, Drip, int(10 ** 18))
     
     with pytest.raises(TokenUnitNotFound):
         CFX(3).to("ETH")
@@ -113,7 +120,7 @@ def test_mul():
 
 def test_div():
     assert_type_and_value(CFX(1) / Drip(1), decimal.Decimal, 10**18)
-    assert_type_and_value(CFX(1) / 10**18, CFX, Drip(1))
+    assert_type_and_value(CFX(1) / 10**18, CFX, decimal.Decimal(1) / decimal.Decimal(10**18))
     with pytest.raises(InvalidTokenOperation):
         Drip(1) / Wei(1)
 
@@ -158,8 +165,10 @@ def test_compare():
     
     assert Drip(1) > 0
     assert Drip(1) >= 0
-    assert Drip(-1) < 0
-    assert Drip(-1) <= 0
+    with pytest.warns(NegativeTokenValueWarning):
+        assert Drip(-1) < 0
+    with pytest.warns(NegativeTokenValueWarning):
+        assert Drip(-1) <= 0
     
     # # NOTE: this is valid operation because python will interpret the follow to
     # # Drip(10) > 5 and 5 > CFX(2)
@@ -175,7 +184,8 @@ def test_value():
     with pytest.warns(FloatWarning):
         tmp.value = 3.0
     with pytest.raises(InvalidTokenValueType):
-        tmp.value = 0.5
+        with pytest.warns(FloatWarning):
+            tmp.value = 0.5
 
 def test_min():
     a = Drip(120*10**9)+GDrip(3)

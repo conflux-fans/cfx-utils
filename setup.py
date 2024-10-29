@@ -61,7 +61,7 @@ setup(
         "typing_extensions>=4.2.0",
         "hexbytes",
         "eth-typing>=2.0.0",
-        "eth-utils<5,>=2.1.0",
+        # "eth-utils>=5.0.0",
     ],
     extras_require=extras_require,
     py_modules=['cfx_utils'],
